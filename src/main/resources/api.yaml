@@ -1,0 +1,128 @@
+openapi: "3.0.3"
+
+info:
+  title: API de Tickets - HelpDesk
+  version: 1.0.0
+  description: Contrato de la API de tickets de soporte. Es la fuente de verdad del microservicio.
+
+servers:
+  - url: http://localhost:8080
+    description: Entorno local
+
+tags:
+  - name: tickets
+    description: Operaciones sobre los tickets de soporte
+
+paths:
+  /api/tickets:
+
+    get:
+      summary: Lista los tickets, con filtro opcional por estado
+      operationId: listarTickets
+      tags: [tickets]
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          description: Filtra los tickets por estado (RN-05)
+          schema:
+            type: string
+            enum: [ABIERTO, EN_PROGRESO, CERRADO]
+      responses:
+        '200':
+          description: Lista de tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+
+    post:
+      summary: Registra un ticket nuevo
+      operationId: crearTicket
+      tags: [tickets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketRequest"
+      responses:
+        '201':
+          description: Ticket creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        '400':
+          description: Datos invalidos
+
+  /api/tickets/{id}:
+    get:
+      summary: Obtiene un ticket por su id
+      operationId: obtenerTicket
+      tags: [tickets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id del ticket
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Ticket encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        '404':
+          description: El ticket no existe
+
+components:
+  schemas:
+
+    Ticket:
+      type: object
+      required:
+        - id
+        - titulo
+        - prioridad
+        - estado
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        titulo:
+          type: string
+          example: No carga el reporte mensual
+        prioridad:
+          type: string
+          enum: [ALTA, MEDIA, BAJA]
+          example: ALTA
+        estado:
+          type: string
+          enum: [ABIERTO, EN_PROGRESO, CERRADO]
+          example: ABIERTO
+        horasEstimadas:
+          type: integer
+          example: 4
+
+    TicketRequest:
+      type: object
+      required:
+        - titulo
+        - prioridad
+      properties:
+        titulo:
+          type: string
+          minLength: 5
+          maxLength: 100
+          example: Falla el envio de correos
+        prioridad:
+          type: string
+          enum: [ALTA, MEDIA, BAJA]
+          example: ALTA
